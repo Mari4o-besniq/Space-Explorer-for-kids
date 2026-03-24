@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Space Explorer for Kids</title>
+<style>
+body{
+font-family: Arial;
+background-color:black;
+color:white;
+text-align:center;
+}
+
+button{
+padding:10px;
+margin:10px;
+font-size:18px;
+}
+
+img{
+width:300px;
+margin-top:20px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🚀 Space Explorer for Kids</h1>
+
+<h2>Choose a planet</h2>
+
+<button onclick="earth()">Earth</button>
+<button onclick="mars()">Mars</button>
+<button onclick="jupiter()">Jupiter</button>
+
+<p id="info"></p>
+
+<img id="planetImage" src="">
+
+<script>
+
+function earth(){
+document.getElementById("info").innerText =
+"Earth is the only planet with life.";
+
+document.getElementById("planetImage").src =
+"https://upload.wikimedia.org/wikipedia/commons/9/97/The_Earth_seen_from_Apollo_17.jpg";
+}
+
+function mars(){
+document.getElementById("info").innerText =
+"Mars is called the Red Planet.";
+
+document.getElementById("planetImage").src =
+"https://upload.wikimedia.org/wikipedia/commons/0/02/OSIRIS_Mars_true_color.jpg";
+}
+
+function jupiter(){
+document.getElementById("info").innerText =
+"Jupiter is the biggest planet in the Solar System.";
+
+document.getElementById("planetImage").src =
+"https://upload.wikimedia.org/wikipedia/commons/e/e2/Jupiter.jpg";
+}
+
+</script>
+
+</body>
+</html>
