@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Explorer for Kids 🚀</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #020818;
+    --card: rgba(255,255,255,0.05);
+    --border: rgba(255,255,255,0.1);
+    --accent: #00e5ff;
+    --gold: #ffd600;
+    --green: #00e676;
+    --red: #ff1744;
+    --purple: #e040fb;
+    --text: #e8f4fd;
+    --subtext: #8baac5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── STARFIELD ── */
+  #stars-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── LAYOUT ── */
+  .page { position: relative; z-index: 1; }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    padding: 60px 20px 40px;
+  }
+
+  .rocket-icon {
+    font-size: 3.5rem;
+    display: block;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-12px); }
+  }
+
+  header h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.8rem, 5vw, 3.2rem);
+    font-weight: 900;
+    background: linear-gradient(135deg, #00e5ff, #e040fb, #ffd600);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 12px 0 8px;
+    letter-spacing: 2px;
+    text-shadow: none;
+  }
+
+  header p {
+    color: var(--subtext);
+    font-size: 1.1rem;
+    font-weight: 600;
+  }
+
+  /* ── NAV ── */
+  .nav-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 0 auto 48px;
+    flex-wrap: wrap;
+    padding: 0 20px;
+  }
+
+  .nav-tab {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 12px 28px;
+    border-radius: 50px;
+    border: 2px solid var(--border);
+    background: var(--card);
+    color: var(--subtext);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+  }
+
+  .nav-tab:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 20px rgba(0,229,255,0.25);
+    transform: translateY(-2px);
+  }
+
+  .nav-tab.active {
+    background: linear-gradient(135deg, rgba(0,229,255,0.2), rgba(224,64,251,0.2));
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 24px rgba(0,229,255,0.35);
+  }
+
+  /* ── SECTIONS ── */
+  .section { display: none; animation: fadeUp 0.5s ease; }
+  .section.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.4rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 32px;
+    color: var(--accent);
+    letter-spacing: 2px;
+  }
+
+  /* ── PLANET BUTTONS ── */
+  .planet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  .planet-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 18px 12px;
+    border-radius: 20px;
+    border: 2px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(8px);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .planet-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 0%, var(--glow), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .planet-btn:hover::before { opacity: 1; }
+
+  .planet-btn:hover {
+    transform: translateY(-6px) scale(1.03);
+    border-color: var(--glow, var(--accent));
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 24px var(--glow, rgba(0,229,255,0.3));
+  }
+
+  .planet-btn.selected {
+    border-color: var(--glow, var(--accent));
+    box-shadow: 0 0 32px var(--glow, rgba(0,229,255,0.4));
+    background: rgba(255,255,255,0.08);
+  }
+
+  .planet-btn .planet-emoji { font-size: 2.2rem; }
+
+  /* Planet color vars */
+  .planet-btn[data-planet="Earth"]   { --glow: rgba(0,229,255,0.5); }
+  .planet-btn[data-planet="Mars"]    { --glow: rgba(255,100,50,0.5); }
+  .planet-btn[data-planet="Jupiter"] { --glow: rgba(255,180,80,0.5); }
+  .planet-btn[data-planet="Venus"]   { --glow: rgba(255,220,80,0.5); }
+  .planet-btn[data-planet="Mercury"] { --glow: rgba(180,180,200,0.5); }
+  .planet-btn[data-planet="Saturn"]  { --glow: rgba(200,160,100,0.5); }
+
+  /* ── PLANET DISPLAY ── */
+  #planet-display {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 32px;
+    text-align: center;
+    backdrop-filter: blur(12px);
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s ease;
+    margin-bottom: 60px;
+  }
+
+  #planet-display.empty { color: var(--subtext); font-size: 1.1rem; }
+
+  .planet-info { animation: fadeUp 0.4s ease; width: 100%; }
+
+  .planet-info img {
+    width: 180px;
+    height: 180px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.15);
+    box-shadow: 0 0 40px rgba(0,229,255,0.3);
+    margin-bottom: 20px;
+    display: block;
+    margin: 0 auto 20px;
+  }
+
+  .planet-info h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--gold);
+  }
+
+  .planet-info p {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--text);
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  /* ── QUIZ ── */
+  #quiz-container {
+    max-width: 680px;
+    margin: 0 auto 60px;
+  }
+
+  .quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .quiz-progress {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.85rem;
+    color: var(--subtext);
+    letter-spacing: 1px;
+  }
+
+  .score-badge {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--gold);
+    background: rgba(255,214,0,0.1);
+    border: 1px solid rgba(255,214,0,0.3);
+    padding: 6px 16px;
+    border-radius: 50px;
+    letter-spacing: 1px;
+  }
+
+  .progress-bar-wrap {
+    width: 100%;
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--purple));
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  .question-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 32px;
+    backdrop-filter: blur(12px);
+    animation: fadeUp 0.4s ease;
+    margin-bottom: 20px;
+  }
+
+  .question-number {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .question-text {
+    font-size: 1.2rem;
+    font-weight: 800;
+    line-height: 1.5;
+    margin-bottom: 24px;
+  }
+
+  .options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .option-btn {
+    padding: 14px 20px;
+    border-radius: 14px;
+    border: 2px solid var(--border);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .option-btn .opt-letter {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.8rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.25s;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(0,229,255,0.08);
+    transform: translateX(4px);
+  }
+
+  .option-btn:hover:not(:disabled) .opt-letter {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+
+  .option-btn.correct {
+    border-color: var(--green);
+    background: rgba(0,230,118,0.12);
+    color: var(--green);
+  }
+
+  .option-btn.correct .opt-letter {
+    background: var(--green);
+    border-color: var(--green);
+    color: var(--bg);
+  }
+
+  .option-btn.wrong {
+    border-color: var(--red);
+    background: rgba(255,23,68,0.12);
+    color: var(--red);
+  }
+
+  .option-btn.wrong .opt-letter {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+  }
+
+  .option-btn:disabled { cursor: default; }
+
+  /* feedback */
+  .feedback {
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 800;
+    min-height: 36px;
+    margin-bottom: 8px;
+    animation: popIn 0.3s ease;
+    letter-spacing: 1px;
+  }
+
+  @keyframes popIn {
+    0%   { transform: scale(0.7); opacity: 0; }
+    70%  { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .feedback.correct { color: var(--green); }
+  .feedback.wrong   { color: var(--red);   }
+
+  /* ── FINAL SCORE ── */
+  .final-score-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    padding: 48px 32px;
+    text-align: center;
+    backdrop-filter: blur(12px);
+    animation: fadeUp 0.5s ease;
+  }
+
+  .trophy { font-size: 5rem; display: block; margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
+
+  .final-score-card h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: var(--gold);
+    margin-bottom: 12px;
+  }
+
+  .score-display {
+    font-family: 'Orbitron', monospace;
+    font-size: 3rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 16px 0;
+  }
+
+  .score-message { color: var(--subtext); font-size: 1.1rem; margin-bottom: 28px; font-weight: 600; }
+
+  .restart-btn {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 14px 36px;
+    border-radius: 50px;
+    border: 2px solid var(--accent);
+    background: rgba(0,229,255,0.1);
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .restart-btn:hover {
+    background: var(--accent);
+    color: var(--bg);
+    box-shadow: 0 0 30px rgba(0,229,255,0.4);
+    transform: scale(1.05);
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 500px) {
+    .planet-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .planet-btn { padding: 12px 6px; font-size: 0.85rem; }
+    .planet-btn .planet-emoji { font-size: 1.8rem; }
+    .question-card { padding: 22px 18px; }
+    .question-text { font-size: 1.05rem; }
+  }
+</style>
+</head>
+<body>
+<canvas id="stars-canvas"></canvas>
+
+<div class="page">
+  <header>
+    <span class="rocket-icon">🚀</span>
+    <h1>Space Explorer for Kids</h1>
+    <p>Discover the wonders of our Solar System!</p>
+  </header>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showSection('planets')">🪐 Planets</button>
+    <button class="nav-tab" onclick="showSection('quiz')">🧠 Quiz Game</button>
+  </div>
+
+  <div class="container">
+
+    <!-- ── PLANETS SECTION ── -->
+    <div id="planets" class="section active">
+      <p class="section-title">🌍 Choose a Planet to Explore</p>
+
+      <div class="planet-grid">
+        <button class="planet-btn" data-planet="Earth"   onclick="showPlanet('Earth')"  ><span class="planet-emoji">🌍</span>Earth</button>
+        <button class="planet-btn" data-planet="Mars"    onclick="showPlanet('Mars')"   ><span class="planet-emoji">🔴</span>Mars</button>
+        <button class="planet-btn" data-planet="Jupiter" onclick="showPlanet('Jupiter')"><span class="planet-emoji">🟠</span>Jupiter</button>
+        <button class="planet-btn" data-planet="Venus"   onclick="showPlanet('Venus')"  ><span class="planet-emoji">✨</span>Venus</button>
+        <button class="planet-btn" data-planet="Mercury" onclick="showPlanet('Mercury')"><span class="planet-emoji">⚫</span>Mercury</button>
+        <button class="planet-btn" data-planet="Saturn"  onclick="showPlanet('Saturn')" ><span class="planet-emoji">💍</span>Saturn</button>
+      </div>
+
+      <div id="planet-display" class="empty">
+        <span>👆 Click a planet to learn cool facts!</span>
+      </div>
+    </div>
+
+    <!-- ── QUIZ SECTION ── -->
+    <div id="quiz" class="section">
+      <p class="section-title">🧠 Space Quiz Challenge</p>
+      <div id="quiz-container">
+        <div class="quiz-header">
+          <span class="quiz-progress" id="q-progress">Question 1 of 10</span>
+          <span class="score-badge" id="score-display">⭐ Score: 0</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progress-bar" style="width:10%"></div>
+        </div>
+        <div id="quiz-body"></div>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+</div><!-- /page -->
+
+<script>
+/* ═══════════════════════════════════════════════
+   STARFIELD
+═══════════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById('stars-canvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, stars;
+
+  function resize() {
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = document.body.scrollHeight;
+    buildStars();
+  }
+
+  function buildStars() {
+    stars = Array.from({ length: 260 }, () => ({
+      x:  Math.random() * W,
+      y:  Math.random() * H,
+      r:  Math.random() * 1.6 + 0.2,
+      o:  Math.random() * 0.7 + 0.3,
+      sp: Math.random() * 0.012 + 0.004,
+      ph: Math.random() * Math.PI * 2,
+    }));
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, W, H);
+    stars.forEach(s => {
+      const alpha = s.o * (0.5 + 0.5 * Math.sin(t * s.sp * 1000 + s.ph));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(draw);
+})();
+
+/* ═══════════════════════════════════════════════
+   SECTION NAV
+═══════════════════════════════════════════════ */
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+
+  if (id === 'quiz') initQuiz();
+
+  // Resize canvas height after section switch
+  setTimeout(() => {
+    const canvas = document.getElementById('stars-canvas');
+    canvas.height = Math.max(document.body.scrollHeight, window.innerHeight);
+  }, 200);
+}
+
+/* ═══════════════════════════════════════════════
+   PLANET DATA
+═══════════════════════════════════════════════ */
+const PLANETS = {
+  Earth: {
+    img:  'https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/600px-The_Earth_seen_from_Apollo_17.jpg',
+    fact: '🌊 Earth is the only known planet with liquid water on its surface and life! It\'s perfectly positioned in the "Goldilocks Zone" — not too hot, not too cold. Our home spins at about 1,670 km/h at the equator!'
+  },
+  Mars: {
+    img:  'https://upload.wikimedia.org/wikipedia/commons/thumb/0/02/OSIRIS_Mars_true_color.jpg/600px-OSIRIS_Mars_true_color.jpg',
+    fact: '🔴 Mars is called the Red Planet because its soil contains iron oxide (rust!). It has the tallest volcano in the Solar System — Olympus Mons — which is 3× taller than Mount Everest! Mars has two tiny moons: Phobos and Deimos.'
+  },
+  Jupiter: {
+    img:  'https://upload.wikimedia.org/wikipedia/commons/thumb/2/2b/Jupiter_and_its_shrunken_Great_Red_Spot.jpg/600px-Jupiter_and_its_shrunken_Great_Red_Spot.jpg',
+    fact: '🌪️ Jupiter is the BIGGEST planet — so huge that 1,300 Earths could fit inside it! The Great Red Spot is a giant storm that has been raging for over 350 years. Jupiter has at least 95 moons, including Europa, which may have a hidden ocean!'
+  },
+  Venus: {
+    img:  'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Venus-real_color.jpg/600px-Venus-real_color.jpg',
+    fact: '🔥 Venus is the hottest planet with temperatures up to 465°C — hot enough to melt lead! It\'s covered in thick clouds of sulfuric acid. A day on Venus is longer than its year, and it spins backwards compared to most planets!'
+  },
+  Mercury: {
+    img:  'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Mercury_in_true_color.jpg/600px-Mercury_in_true_color.jpg',
+    fact: '☿ Mercury is the closest planet to the Sun and the smallest planet in our Solar System. Even though it\'s closest to the Sun, Venus is actually hotter! Mercury\'s surface can reach 430°C during the day but drops to -180°C at night!'
+  },
+  Saturn: {
+    img:  'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Saturn_during_Equinox.jpg/600px-Saturn_during_Equinox.jpg',
+    fact: '💍 Saturn has the most spectacular ring system made of ice and rock chunks! It\'s so light it could float on water if there were an ocean big enough. Saturn has 146 moons — including Titan, which has a thick atmosphere and liquid methane lakes!'
+  }
+};
+
+function showPlanet(name) {
+  document.querySelectorAll('.planet-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelector(`[data-planet="${name}"]`).classList.add('selected');
+
+  const p   = PLANETS[name];
+  const box = document.getElementById('planet-display');
+  box.classList.remove('empty');
+  box.innerHTML = `
+    <div class="planet-info">
+      <img src="${p.img}" alt="${name}" onerror="this.src='https://via.placeholder.com/180x180/0a1628/00e5ff?text=${name}'">
+      <h2>${name}</h2>
+      <p>${p.fact}</p>
+    </div>`;
+
+  // Resize canvas after content change
+  setTimeout(() => {
+    const canvas = document.getElementById('stars-canvas');
+    canvas.height = Math.max(document.body.scrollHeight, window.innerHeight);
+  }, 200);
+}
+
+/* ═══════════════════════════════════════════════
+   QUIZ DATA
+═══════════════════════════════════════════════ */
+const ALL_QUESTIONS = [
+  { q: '🔴 Which planet is called the Red Planet?',                 opts: ['Mars','Venus','Jupiter'],           ans: 0 },
+  { q: '🌌 Which is the BIGGEST planet in the Solar System?',      opts: ['Saturn','Neptune','Jupiter'],        ans: 2 },
+  { q: '🌿 Which planet is the only one known to support life?',   opts: ['Mars','Earth','Venus'],              ans: 1 },
+  { q: '🔥 Which planet is the HOTTEST in our Solar System?',      opts: ['Mercury','Mars','Venus'],            ans: 2 },
+  { q: '☀️ Which planet is closest to the Sun?',                   opts: ['Venus','Mercury','Earth'],           ans: 1 },
+  { q: '💍 Which planet has the most spectacular ring system?',    opts: ['Jupiter','Uranus','Saturn'],         ans: 2 },
+  { q: '🌊 Which planet is known as the Blue Planet?',             opts: ['Neptune','Earth','Uranus'],          ans: 1 },
+  { q: '🌪️ Which planet has the famous Great Red Spot?',          opts: ['Saturn','Mars','Jupiter'],           ans: 2 },
+  { q: '🐌 Which planet rotates the SLOWEST on its axis?',         opts: ['Mercury','Venus','Mars'],            ans: 1 },
+  { q: '🌙 Which planet has two moons named Phobos and Deimos?',   opts: ['Earth','Jupiter','Mars'],            ans: 2 },
+  { q: '🏔️ Which planet has the tallest volcano in the Solar System?', opts: ['Earth','Mars','Venus'],         ans: 1 },
+  { q: '🧊 What are Saturn\'s rings mostly made of?',              opts: ['Rock and dust','Ice and rock','Gas'], ans: 1 },
+  { q: '⏱️ On which planet is a day LONGER than a year?',          opts: ['Mercury','Venus','Mars'],            ans: 1 },
+  { q: '🌑 How many moons does Mercury have?',                     opts: ['0','1','2'],                         ans: 0 },
+  { q: '🔭 Which is the smallest planet in the Solar System?',     opts: ['Mars','Mercury','Pluto'],            ans: 1 },
+];
+
+/* ═══════════════════════════════════════════════
+   QUIZ LOGIC
+═══════════════════════════════════════════════ */
+let questions = [], current = 0, score = 0, answered = false;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function initQuiz() {
+  questions = shuffle(ALL_QUESTIONS).slice(0, 10);
+  current   = 0;
+  score     = 0;
+  answered  = false;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  if (current >= questions.length) { renderFinal(); return; }
+
+  const q   = questions[current];
+  const pct = ((current) / questions.length * 100).toFixed(0);
+
+  document.getElementById('q-progress').textContent  = `Question ${current + 1} of ${questions.length}`;
+  document.getElementById('score-display').textContent = `⭐ Score: ${score}`;
+  document.getElementById('progress-bar').style.width  = (((current + 1) / questions.length) * 100) + '%';
+
+  const letters = ['A', 'B', 'C'];
+  const opts    = q.opts.map((o, i) => `
+    <button class="option-btn" onclick="selectAnswer(${i})" id="opt-${i}">
+      <span class="opt-letter">${letters[i]}</span>${o}
+    </button>`).join('');
+
+  document.getElementById('quiz-body').innerHTML = `
+    <div class="question-card">
+      <div class="question-number">Question ${current + 1}</div>
+      <div class="question-text">${q.q}</div>
+      <div class="options-grid">${opts}</div>
+    </div>
+    <div class="feedback" id="feedback"></div>`;
+
+  answered = false;
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+
+  const q       = questions[current];
+  const correct = q.ans;
+  const fb      = document.getElementById('feedback');
+  const btns    = document.querySelectorAll('.option-btn');
+
+  btns.forEach(b => b.disabled = true);
+
+  if (idx === correct) {
+    score++;
+    document.getElementById(`opt-${idx}`).classList.add('correct');
+    fb.textContent = 'Correct ✅';
+    fb.className   = 'feedback correct';
+  } else {
+    document.getElementById(`opt-${idx}`).classList.add('wrong');
+    document.getElementById(`opt-${correct}`).classList.add('correct');
+    fb.textContent = 'Wrong ❌';
+    fb.className   = 'feedback wrong';
+  }
+
+  document.getElementById('score-display').textContent = `⭐ Score: ${score}`;
+
+  setTimeout(() => {
+    current++;
+    renderQuestion();
+  }, 1400);
+}
+
+function renderFinal() {
+  const pct = Math.round((score / questions.length) * 100);
+  let trophy = '🏆', msg;
+
+  if (pct >= 90)      { trophy = '🏆'; msg = 'Outstanding, Space Genius! You\'re ready to be an astronaut! 🚀'; }
+  else if (pct >= 70) { trophy = '🥇'; msg = 'Great job, Explorer! You know your planets really well! 🌟'; }
+  else if (pct >= 50) { trophy = '🥈'; msg = 'Good effort, Space Cadet! Keep exploring and you\'ll reach the stars! 🌙'; }
+  else                { trophy = '🚀'; msg = 'Keep exploring the cosmos! Every astronaut starts somewhere! ✨'; }
+
+  document.getElementById('q-progress').textContent   = 'Quiz Complete!';
+  document.getElementById('score-display').textContent = `⭐ Score: ${score}`;
+  document.getElementById('progress-bar').style.width  = '100%';
+
+  document.getElementById('quiz-body').innerHTML = `
+    <div class="final-score-card">
+      <span class="trophy">${trophy}</span>
+      <h2>Quiz Complete!</h2>
+      <div class="score-display">${score} / ${questions.length}</div>
+      <p class="score-message">${msg}</p>
+      <button class="restart-btn" onclick="initQuiz()">🔄 Play Again</button>
+    </div>`;
+
+  setTimeout(() => {
+    const canvas = document.getElementById('stars-canvas');
+    canvas.height = Math.max(document.body.scrollHeight, window.innerHeight);
+  }, 200);
+}
+</script>
+</body>
+</html>
